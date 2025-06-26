@@ -1,7 +1,9 @@
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { validateEmail, validatePassword } from "../utilities/validation";
 import { Link } from "react-router-dom";
+import { loginApi, registerApi } from "../apis/authentication";
 
 const InitialErrorsState = {
   email: "",
@@ -10,8 +12,9 @@ const InitialErrorsState = {
 };
 
 const Authentication = ({ pageType }) => {
-  const [email, setEmail] = useState(null);
-  const [password, setPassword] = useState(null);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState(InitialErrorsState);
 
   const handleEmailChange = (e) => {
@@ -23,18 +26,52 @@ const Authentication = ({ pageType }) => {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let newErrors = {};
+
     if (!validateEmail(email)) {
+      newErrors.email = "Invalid email";
     }
-    setErrors({
-      ...errors,
-      email: "Invalid email",
-    });
+
     if (!validatePassword(password)) {
+      newErrors.password = "Invalid password";
     }
-    setErrors({
-      ...errors,
-      password: "Password should be atleast 6 characters long",
-    });
+
+    setErrors(newErrors);
+
+    const hasErrors = Object.values(errors).some((error) => error !== "");
+
+    if (hasErrors) return;
+
+    if (pageType === PageType.LOGIN) {
+      const [result, error] = await loginApi({
+        user: {
+          email: email,
+          password: password,
+        },
+      });
+      handleResponse([result, error]);
+    } else {
+      const [result, error] = await registerApi({
+        user: {
+          email: email,
+          password: password,
+        },
+      });
+      handleResponse([result, error]);
+    }
+  };
+
+  const handleResponse = ([result, error]) => {
+    if (error) {
+      setErrors({
+        ...errors,
+        api: error,
+      });
+    } else {
+      navigate("/");
+    }
   };
 
   return (
@@ -43,22 +80,24 @@ const Authentication = ({ pageType }) => {
         <h3 className="text-xl font-bold">
           {pageType === PageType.LOGIN ? "Login" : "Register"}
         </h3>
-        {
-          (pageType === PageType.LOGIN) ?
-            <p>
+        {pageType === PageType.LOGIN ? (
+          <p>
             Not a user?
             <Link to="/register" className="ms-1 underline">
               Register
             </Link>
-            </p>
-            :
-            <p>
+          </p>
+        ) : (
+          <p>
             Already a user?
             <Link to="/login" className="ms-1 underline">
               Login
             </Link>
-            </p>
-        }
+          </p>
+        )}
+        {errors.api && (
+          <p className="text-sm text-red-500 mt-4">{errors.api}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="mt-10 flex gap-4 flex flex-col max-w-90">
             <input
