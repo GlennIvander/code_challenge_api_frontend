@@ -1,9 +1,10 @@
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { validateEmail, validatePassword } from "../utilities/validation";
 import { Link } from "react-router-dom";
 import { loginApi, registerApi } from "../apis/authentication";
+import { useCookies } from "react-cookie";
 
 const InitialErrorsState = {
   email: "",
@@ -12,7 +13,15 @@ const InitialErrorsState = {
 };
 
 const Authentication = ({ pageType }) => {
+  const [cookies, setCookie] = useCookies([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (cookies.jwt) {
+      navigate("/");
+    }
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState(InitialErrorsState);
@@ -53,23 +62,29 @@ const Authentication = ({ pageType }) => {
       });
       handleResponse([result, error]);
     } else {
-      const [result, error] = await registerApi({
+      const [response, error] = await registerApi({
         user: {
           email: email,
           password: password,
         },
       });
-      handleResponse([result, error]);
+      handleResponse([response, error]);
     }
   };
 
-  const handleResponse = ([result, error]) => {
+  const handleResponse = ([response, error]) => {
     if (error) {
       setErrors({
         ...errors,
         api: error,
       });
     } else {
+      const jwt = response.headers.get("Authorization");
+      // const result = response.json();
+      // const message = result.message;
+      // const user = result.data;
+      setCookie("jwt", jwt);
+
       navigate("/");
     }
   };
