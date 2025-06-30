@@ -41,11 +41,17 @@ const Authentication = ({ pageType }) => {
     let newErrors = {};
 
     if (!validateEmail(email)) {
-      newErrors.email = "Invalid email";
+      newErrors = {
+        ...newErrors,
+        email: "Invalid email",
+      };
     }
 
     if (!validatePassword(password)) {
-      newErrors.password = "Invalid password";
+      newErrors = {
+        ...newErrors,
+        password: "Password shoulb be at least 6 characters long.",
+      };
     }
 
     setErrors(newErrors);
@@ -73,7 +79,7 @@ const Authentication = ({ pageType }) => {
     }
   };
 
-  const handleResponse = ([response, error]) => {
+  const handleResponse = async ([response, error]) => {
     if (error) {
       setErrors({
         ...errors,
@@ -81,11 +87,7 @@ const Authentication = ({ pageType }) => {
       });
     } else {
       const jwt = response.headers.get("Authorization");
-      // const result = response.json();
-      // const message = result.message;
-      // const user = result.data;
       setCookie("jwt", jwt);
-
       navigate("/");
     }
   };
@@ -111,15 +113,13 @@ const Authentication = ({ pageType }) => {
             </Link>
           </p>
         )}
-        {errors.api && (
-          <p className="text-sm text-red-500 mt-4">{errors.api}</p>
-        )}
-        <form onSubmit={handleSubmit}>
-          <div className="mt-10 flex gap-4 flex flex-col max-w-90">
+
+        <form className="mt-10 max-w-96 flex flex-col gap-8">
+          <div>
             <input
               name="email"
               type="email"
-              className="py-2 border border-gray-600 rounded px-3"
+              className="py-2 w-full border border-gray-600 rounded px-3"
               placeholder="enter email"
               value={email}
               onChange={handleEmailChange}
@@ -127,10 +127,12 @@ const Authentication = ({ pageType }) => {
             {errors.email && (
               <p className="text-sm text-red-500 mt-1">{errors.email}</p>
             )}
+          </div>
+          <div>
             <input
               name="password"
               type="password"
-              className="py-2 border border-gray-600 rounded px-3"
+              className="py-2 w-full border border-gray-600 rounded px-3"
               placeholder="enter password"
               value={password}
               onChange={handlePasswordChange}
@@ -138,12 +140,14 @@ const Authentication = ({ pageType }) => {
             {errors.password && (
               <p className="text-sm text-red-500 mt-1">{errors.password}</p>
             )}
-
-            <Button>
-              {pageType === PageType.LOGIN ? "Login" : "Register"}
-            </Button>
-
           </div>
+
+          <Button onClick={handleSubmit}>
+            {pageType === PageType.LOGIN ? "Login" : "Register"}
+          </Button>
+          {errors.api && (
+            <p className="text-sm text-medium text-red-500">{error.api}</p>
+          )}
         </form>
       </div>
     </div>
