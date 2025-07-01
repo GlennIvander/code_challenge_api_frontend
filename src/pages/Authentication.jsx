@@ -146,7 +146,7 @@ const Authentication = ({ pageType }) => {
             {pageType === PageType.LOGIN ? "Login" : "Register"}
           </Button>
           {errors.api && (
-            <p className="text-sm text-medium text-red-500">{error.api}</p>
+            <p className="text-sm text-medium text-red-500">{errors.api}</p>
           )}
         </form>
       </div>
